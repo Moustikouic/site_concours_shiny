@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Concours Shiny Pokémon</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f0f0f0; }
+        h1 { color: #444; }
+        form { margin-bottom: 20px; }
+        .player-section { margin-bottom: 40px; }
+        .pokemon {
+            position: relative;
+            display: inline-block;
+            text-align: center;
+            margin: 10px;
+            padding: 10px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 0 5px rgba(0,0,0,0.1);
+        }
+        img { image-rendering: pixelated; }
+        .remove-btn {
+            position: absolute;
+            top: 2px;
+            right: 6px;
+            color: #f44336;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 16px;
+            user-select: none;
+            background: none;
+            border: none;
+        }
+        .remove-btn:hover {
+            color: #d32f2f;
+        }
+        label, select, input, button {
+            margin-right: 10px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <h1>😏😏​​ Concours de Pokémon Shiny 🤭​🥺​</h1>
+
+    <form method="post">
+        <label for="player"> Joueur:</label>
+        <select name="player" id="player">
+            {% for name in players_list %}
+                <option value="{{ name }}">{{ name }}</option>
+            {% endfor %}
+        </select>
+
+        <label for="pokemon"> Pokémon:</label>
+        <input list="pokemon-list" name="pokemon" id="pokemon" required placeholder="Choisir un pokémon..." autocomplete="off">
+        <datalist id="pokemon-list">
+            {% for entry in pokedex %}
+                <option value="{{ entry.name }} (#{{ entry.id }})">
+            {% endfor %}
+        </datalist>
+
+        <label for="source"> Rencontre:</label>
+        <select name="source" id="source" required>
+            <option value="oeuf">Œuf</option>
+            <option value="reset">Reset</option>
+            <option value="event">Event spécial</option>
+            <option value="rencontre" selected>Rencontre</option>
+        </select>
+
+        <div id="extraFields" style="display:none; margin-top:10px;">
+            <label id="labelOeuf" style="display:none;">
+                Nombre d'œufs éclos :
+                <input type="number" name="nb_oeufs" id="nb_oeufs" min="0" value="0" style="width:60px;">
+            </label>
+            <label id="labelReset" style="display:none;">
+                Nombre de resets :
+                <input type="number" name="nb_resets" id="nb_resets" min="0" value="0" style="width:60px;">
+            </label>
+        </div>
+
+        <button type="submit">Ajouter</button>
+    </form>
+
+    {% for player, pokemons in players.items() %}
+        <div class="player-section">
+            <h2>{{ player }} – {{ pokemons|length }} shiny(s)</h2>
+            {% for p in pokemons %}
+                <div class="pokemon">
+                    <form method="post" action="{{ url_for('remove_pokemon') }}" onsubmit="return confirm('Supprimer {{ p.name }} de {{ player }} ?');" style="display:inline;">
+                        <input type="hidden" name="player" value="{{ player }}">
+                        <input type="hidden" name="pokemon_name" value="{{ p.name }}">
+                        <button type="submit" class="remove-btn" title="Supprimer ce Pokémon">×</button>
+                    </form>
+                    <img src="{{ p.sprite_shiny }}" alt="{{ p.name }}">
+                    <div><strong>{{ p.name }}</strong></div>
+                    <div>{{ ", ".join(p.types) }}</div><br>
+                    <div><span style="font-size: 90%">Rencontre: <b>{{ p.source|capitalize }}</b></span></div>
+                    {% if p.source == 'oeuf' and p.get('nb_oeufs', 0) > 0 %}
+                        <div><small>Œufs éclos: {{ p.nb_oeufs }}</small></div>
+                    {% elif p.source == 'reset' and p.get('nb_resets', 0) > 0 %}
+                        <div><small>Nombre de resets: {{ p.nb_resets }}</small></div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+    {% endfor %}
+
+<script>
+    const sourceSelect = document.getElementById('source');
+    const extraFieldsDiv = document.getElementById('extraFields');
+    const labelOeuf = document.getElementById('labelOeuf');
+    const labelReset = document.getElementById('labelReset');
+
+    function updateExtraFields() {
+        const val = sourceSelect.value;
+        if (val === 'oeuf') {
+            extraFieldsDiv.style.display = 'block';
+            labelOeuf.style.display = 'inline-block';
+            labelReset.style.display = 'none';
+        } else if (val === 'reset') {
+            extraFieldsDiv.style.display = 'block';
+            labelReset.style.display = 'inline-block';
+            labelOeuf.style.display = 'none';
+        } else {
+            extraFieldsDiv.style.display = 'none';
+            labelOeuf.style.display = 'none';
+            labelReset.style.display = 'none';
+        }
+    }
+
+    sourceSelect.addEventListener('change', updateExtraFields);
+    updateExtraFields(); // au chargement
+</script>
+
+</body>
+</html>

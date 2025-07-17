@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: site_concours_shiny
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python app.py
+    plan: free
+    region: frankfurt
+    envVars:
+      - key: FLASK_ENV
+        value: production
