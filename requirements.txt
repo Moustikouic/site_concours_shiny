@@ -1,3 +1,4 @@
-flask
-requests
+Flask
 Flask-SQLAlchemy
+requests
+psycopg2-binary
